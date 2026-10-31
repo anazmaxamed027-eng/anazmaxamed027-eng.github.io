@@ -2,14 +2,138 @@
 <html lang="so">
 <head>
     <meta charset="UTF-8">
-    <title>Website-kayga Koowaad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forex AI Agent Dashboard</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background-color: #f0f8ff; padding: 50px; }
-        h1 { color: #007bff; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b0f19; color: #f8fafc; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 25px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h2, h3 { color: #38bdf8; text-align: center; margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #9ca3af; }
+        input, select { width: 100%; padding: 12px; background: #1f2937; border: 1px solid #374151; border-radius: 6px; color: white; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #0284c7; border: none; border-radius: 6px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0369a1; }
+        .hidden { display: none !important; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-box { background: #1f2937; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #374151; }
+        .stat-box h4 { margin: 0; color: #9ca3af; font-size: 13px; }
+        .stat-box p { margin: 5px 0 0 0; font-size: 22px; font-weight: bold; color: #38bdf8; }
+        .vps-box { background: #1f2937; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ef4444; }
+        .status-dot { inline-size: 10px; block-size: 10px; background: #ef4444; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .connected .status-dot { background: #22c55e; }
+        .connected { border-left-color: #22c55e; }
+        .error-msg { color: #ef4444; font-size: 14px; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <h1>Ku soo dhawaada website-kayga koowaad! 🎉</h1>
-    <p>Haye saxiib! Kani waa website-ka aan anigu gacantayda ku dhisay, kuna kaydiyay GitHub.</p>
+
+    <!-- 1. BOGGA PASSWORD-KA (LOGIN SCREEN) -->
+    <div id="login-screen" class="container">
+        <h2>Forex AI Agent 🤖</h2>
+        <p style="text-align: center; color: #9ca3af; font-size: 14px;">Geli Password-kaaga si aad u gasho Dashboard-ka gaarka ah.</p>
+        <div class="input-group">
+            <label for="password">Password-ka:</label>
+            <input type="password" id="password" placeholder="Geli password-ka...">
+        </div>
+        <button onclick="checkPassword()">Gasho Dashboard</button>
+        <p id="login-error" class="error-msg hidden">Password-ku waa khalbad saxiib!</p>
+    </div>
+
+    <!-- 2. BOGGA CASHBOARD-KA (MAIN DASHBOARD) -->
+    <div id="dashboard-screen" class="container hidden">
+        <h2>AI Agent Dashboard 📊</h2>
+        
+        <!-- Xisaabinta Guud -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h4>Wadar Guul (Wins)</h4>
+                <p id="stat-wins">0</p>
+            </div>
+            <div class="stat-box">
+                <h4>Wadar Qasaaro (Losses)</h4>
+                <p id="stat-losses">0</p>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-box" style="grid-column: span 2;">
+                <h4>Boqolleyda Guusha (Win Rate %)</h4>
+                <p id="stat-rate" style="color: #22c55e;">0%</p>
+            </div>
+        </div>
+
+        <!-- Meesha Trade-ka laga galiyo -->
+        <h3>+ Diiwaangeli Trade Cusub</h3>
+        <div class="input-group">
+            <label for="trade-status">Natiijada:</label>
+            <select id="trade-status">
+                <option value="win">Guul (Win) ✅</option>
+                <option value="loss">Qasaaro (Loss) ❌</option>
+            </select>
+        </div>
+        <button onclick="addTrade()" style="background: #22c55e;">Ku Dar Diiwaanka</button>
+
+        <!-- Qaybta VPS-ka (Hadhow) -->
+        <div id="vps-panel" class="vps-box">
+            <h4>Xaaladda Server-ka VPS</h4>
+            <p style="margin: 5px 0; font-size: 14px;"><span class="status-dot"></span> <span id="vps-text">Waa Ka Maqan Yahay (Disconnected)</span></p>
+            <button onclick="toggleVPS()" id="vps-btn" style="margin-top: 10px; background: #374151; font-size: 13px; padding: 8px;">Shid / Ku Xir VPS-ka</button>
+        </div>
+    </div>
+
+    <script>
+        let wins = 0;
+        let losses = 0;
+
+        // Tijaabada Password-ka (Default waa 1234)
+        function checkPassword() {
+            const inputPass = document.getElementById('password').value;
+            if (inputPass === 'pio54321') {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        // Xisaabiyaha Trade-ka
+        function addTrade() {
+            const status = document.getElementById('trade-status').value;
+            if (status === 'win') {
+                wins++;
+                document.getElementById('stat-wins').innerText = wins;
+            } else {
+                losses++;
+                document.getElementById('stat-losses').innerText = losses;
+            }
+            
+            // Xisaabi Win Rate %
+            const total = wins + losses;
+            const rate = total > 0 ? Math.round((wins / total) * 100) : 0;
+            document.getElementById('stat-rate').innerText = rate + "%";
+        }
+
+        // VPS Simulation
+        let vpsConnected = false;
+        function toggleVPS() {
+            const panel = document.getElementById('vps-panel');
+            const text = document.getElementById('vps-text');
+            const btn = document.getElementById('vps-btn');
+            
+            if (!vpsConnected) {
+                panel.classList.add('connected');
+                text.innerText = "Wuu Shidnaa Yahay (Connected to Forex Agent)";
+                btn.innerText = "Demi VPS-ka";
+                btn.style.background = "#ef4444";
+                vpsConnected = true;
+            } else {
+                panel.classList.remove('connected');
+                text.innerText = "Waa Ka Maqan Yahay (Disconnected)";
+                btn.innerText = "Shid / Ku Xir VPS-ka";
+                btn.style.background = "#374151";
+                vpsConnected = false;
+            }
+        }
+    </script>
 </body>
 </html>
